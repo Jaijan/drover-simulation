@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Grid, OrbitControls, PerspectiveCamera, Text } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { Suspense } from 'react';
+import { Grid, OrbitControls, PerspectiveCamera, Text, useGLTF } from '@react-three/drei';
 import Plot from 'react-plotly.js';
 import * as THREE from 'three';
 
 type Telemetry = { simulation_time_s:number; position_world_m:number[]; center_of_mass_body_m:number[]; hover_height_m:number; velocity_world_m_s:number[]; acceleration_world_m_s2:number[]; orientation_quaternion_body_to_world:number[]; attitude_euler_rad:number[]; omega_body_rad_s:number[]; lift:any; propulsion:any; electrical:any; model_calibration_status:string };
 const API=(import.meta.env.VITE_API_URL||'http://localhost:8000').replace(/\/$/,'');
 const WS_URL=import.meta.env.VITE_WS_URL||'ws://localhost:8000/ws/simulation';
+const MODEL_URL=import.meta.env.VITE_DROVER_GLB_URL||'/models/drover.glb';
 function Vehicle({t}:{t:Telemetry|null}) {
   const q=t?.orientation_quaternion_body_to_world ?? [1,0,0,0];
   const position=t?.position_world_m ?? [0,0,0];
@@ -15,38 +17,18 @@ function Vehicle({t}:{t:Telemetry|null}) {
   const quat=conversion.clone().multiply(bodyQuat).multiply(conversion.clone().invert());
   const com=t?.center_of_mass_body_m ?? [0,0,0];
   const offset=new THREE.Vector3(com[0],com[2],-com[1]).applyQuaternion(quat);
-  const prop=t?.propulsion;
   return <group position={[position[0]-offset.x,position[2]-offset.y,-position[1]-offset.z]} quaternion={quat}>
-    <mesh><boxGeometry args={[.12,.035,.12]}/><meshStandardMaterial color="#27384a" metalness={.7} roughness={.35}/></mesh>
-    {[Math.PI/4,-Math.PI/4].map((angle,i)=><mesh key={i} rotation={[0,angle,0]}><boxGeometry args={[.46,.018,.026]}/><meshStandardMaterial color="#93a6b8" metalness={.55}/></mesh>)}
-    <mesh position={[0,-.07,0]}><cylinderGeometry args={[.105,.105,.025,32]}/><meshStandardMaterial color="#2d7d8a" transparent opacity={.3}/></mesh>
-    <mesh position={[0,-.09,0]} rotation={[Math.PI/2,0,0]}><torusGeometry args={[.16,.012,8,40]}/><meshStandardMaterial color="#d4a45a"/></mesh>
-    <mesh position={[0,-.105,0]}><cylinderGeometry args={[.035,.045,.018,16]}/><meshStandardMaterial color="#7ac6d5"/></mesh><LiftRotor rpm={t?.lift?.fan_rpm||0}/>
-    {[[-.17,.015,-.17],[-.17,.015,.17]].map((p,i)=><group key={i} position={p as [number,number,number]}>
-      <mesh position={[0,0,.035]}><boxGeometry args={[.055,.025,.045]}/><meshStandardMaterial color="#8c7654"/></mesh>
-      <mesh position={[.015,0,.012]} rotation={[0,0,-.35]}><boxGeometry args={[.045,.006,.008]}/><meshStandardMaterial color="#dbbe7c"/></mesh>
-      <group rotation={[0,0,-(prop?.[i===0?'left':'right']?.servo_rad||0)]}>
-      <mesh position={[.035,0,0]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[.04,.04,.045,16]}/><meshStandardMaterial color="#546a7d"/></mesh>
-      <group position={[.075,0,0]}><Rotor rpm={prop?.[i===0?'left':'right']?.rpm||0}/></group>
-      </group>
-    </group>)}
-    <axesHelper args={[.25]}/>
+    <DroverGlb/>
   </group>;
 }
-function Rotor({rpm}:{rpm:number}){
- const ref=useRef<THREE.Group>(null);
- useFrame((_,dt)=>{if(ref.current)ref.current.rotation.x+=(rpm*2*Math.PI/60)*dt});
- return <group ref={ref}><mesh rotation={[0,Math.PI/2,0]}><torusGeometry args={[.089,.004,4,28]}/><meshStandardMaterial color="#83c7d2"/></mesh>{[0,2*Math.PI/3,4*Math.PI/3].map(a=><mesh key={a} rotation={[a,Math.PI/2,0]}><boxGeometry args={[.18,.006,.018]}/><meshStandardMaterial color="#c3d0db"/></mesh>)}</group>;
-}
-function LiftRotor({rpm}:{rpm:number}){
- const ref=useRef<THREE.Group>(null);
- useFrame((_,dt)=>{if(ref.current)ref.current.rotation.y+=(rpm*2*Math.PI/60)*dt});
- return <group ref={ref} position={[0,-.11,0]}>{[0,2*Math.PI/3,4*Math.PI/3].map(a=><mesh key={a} rotation={[0,a,0]}><boxGeometry args={[.085,.004,.012]}/><meshStandardMaterial color="#8da6b4"/></mesh>)}</group>;
+function DroverGlb(){
+ const {scene}=useGLTF(MODEL_URL);
+ return <primitive object={scene}/>;
 }
 function VehicleView({t}:{t:Telemetry|null}) {
   const [camera,setCamera]=useState('Orbit');
   const cameraPosition:[number,number,number]=camera==='Top'?[0,4,0]:camera==='Front'?[4,1.4,0]:camera==='Rear'?[-4,1.4,0]:camera==='Side'?[0,1.5,-4]:[2.8,2.1,3];
-  return <div className="viewport"><div className="viewport-top"><span>PLACEHOLDER DROVER GEOMETRY · NOT CAD</span><select value={camera} onChange={e=>setCamera(e.target.value)}>{['Orbit','Top','Front','Rear','Side'].map(x=><option key={x}>{x}</option>)}</select></div><Canvas><color attach="background" args={['#0a1118']}/><PerspectiveCamera key={camera} makeDefault position={cameraPosition} up={camera==='Top'?[0,0,-1]:[0,1,0]} fov={45}/><ambientLight intensity={1.1}/><directionalLight position={[4,6,3]} intensity={2}/><Grid infiniteGrid cellSize={.25} sectionSize={1} fadeDistance={9} sectionColor="#304454" cellColor="#1d2a35"/><Vehicle t={t}/><OrbitControls makeDefault/><Text position={[0,.03,0]} color="#526575" fontSize={.1}>+X forward · +Z up</Text></Canvas></div>;
+  return <div className="viewport"><div className="viewport-top"><span>VEHICLE MODEL · drover.glb</span><select value={camera} onChange={e=>setCamera(e.target.value)}>{['Orbit','Top','Front','Rear','Side'].map(x=><option key={x}>{x}</option>)}</select></div><Canvas><color attach="background" args={['#0a1118']}/><PerspectiveCamera key={camera} makeDefault position={cameraPosition} up={camera==='Top'?[0,0,-1]:[0,1,0]} fov={45}/><ambientLight intensity={1.1}/><directionalLight position={[4,6,3]} intensity={2}/><Grid infiniteGrid cellSize={.25} sectionSize={1} fadeDistance={9} sectionColor="#304454" cellColor="#1d2a35"/><Suspense fallback={<Text position={[0,.2,0]} color="#9aabb8" fontSize={.06}>Loading DROVER GLB...</Text>}><Vehicle t={t}/></Suspense><OrbitControls makeDefault/><Text position={[0,.03,0]} color="#526575" fontSize={.1}>+X forward · +Z up</Text></Canvas></div>;
 }
 function App(){
  const [telemetry,setTelemetry]=useState<Telemetry|null>(null); const [samples,setSamples]=useState<Telemetry[]>([]); const [state,setState]=useState('disconnected'); const [error,setError]=useState(''); const [tab,setTab]=useState('Simulation Lab'); const [config,setConfig]=useState<any>(null);
@@ -70,7 +52,7 @@ function App(){
  <section className="panel compact"><div className="panel-head"><div><label>VEHICLE STATE</label><h2>Telemetry</h2></div></div><Row name="Position (X / Y / Z)" value={data?data.position_world_m.map(v=>v.toFixed(2)).join(' / ')+' m':'—'}/><Row name="Velocity (X / Y / Z)" value={data?data.velocity_world_m_s.map(v=>v.toFixed(2)).join(' / ')+' m/s':'—'}/><Row name="Roll / Pitch / Yaw" value={data?data.attitude_euler_rad.map(v=>(v*180/Math.PI).toFixed(1)).join('° / ')+'°':'—'}/><Row name="Lift fan RPM" value={data?data.lift.fan_rpm.toFixed(0):'—'}/><Row name="Left / right thrust" value={data?`${data.propulsion.left.thrust_n.toFixed(2)} / ${data.propulsion.right.thrust_n.toFixed(2)} N`:'—'}/><Row name="Battery voltage/current/power" value={data?.electrical?.model_status==='configured_model'?`${data.electrical.voltage_v.toFixed(2)} V · ${data.electrical.current_a.toFixed(2)} A · ${data.electrical.power_w.toFixed(1)} W`:'Unconfigured'}/><Row name="Calibration" value="Uncalibrated"/></section>
  <section className="panel compact"><div className="panel-head"><div><label>PARAMETER STATUS</label><h2>Configuration</h2></div></div><p className="muted">{config?.missing_required?.length?`${config.missing_required.length} required inputs are missing.`:'Mechanical model inputs configured.'} Unknown electrical parameters leave electrical telemetry unavailable.</p>{config?.missing_required?.slice(0,5).map((p:string)=><Row key={p} name={p} value="Required"/>)}<a href={`${API}/docs`} target="_blank">Open configuration API ↗</a></section></aside></div>
  <section className="panel experiment"><div className="panel-head"><div><label>REPRODUCIBLE TESTING</label><h2>Experiment lab</h2></div></div><p className="muted">{catalog[experiment]?.method}</p><div className="experiment-controls"><select value={experiment} onChange={e=>setExperiment(e.target.value)}>{Object.entries(catalog).map(([id,x]:any)=><option key={id} value={id}>{id} · {x.name}</option>)}</select><label>Duration (s) <input type="number" min=".1" max="3600" value={duration} onChange={e=>setDuration(+e.target.value)}/></label><label>Repeats <input type="number" min="1" max="100" value={repeatCount} onChange={e=>setRepeatCount(+e.target.value)}/></label><button className="primary" disabled={runBusy} onClick={runExperiment}>{runBusy?'Running…':'Run batch'}</button></div><label className="sweep-label">Command sweep JSON (Cartesian product; hardware RPM/angle limits are configured values)</label><textarea className="sweep" value={sweepJson} onChange={e=>setSweepJson(e.target.value)} placeholder={'{"lift_rpm":[configured values]}'}/><div className="runlist">{runs.slice(0,8).map(r=><div key={r.id}><span>{r.name}</span><small>{r.id.slice(0,8)} · {r.status} · {r.started_utc}</small><a href={`${API}/api/runs/${r.id}/export.csv`}>CSV</a><a href={`${API}/api/runs/${r.id}/export.json`}>JSON</a><a href={`${API}/api/runs/${r.id}/report.pdf`}>PDF</a><a href={`${API}/api/runs/${r.id}/analysis`}>Stats</a></div>)}</div><div className="compare-controls"><label>Compare saved runs</label><select value={compareA} onChange={e=>setCompareA(e.target.value)}><option value="">Run A</option>{runs.map(r=><option key={r.id} value={r.id}>{r.name} · {r.id.slice(0,8)}</option>)}</select><select value={compareB} onChange={e=>setCompareB(e.target.value)}><option value="">Run B</option>{runs.map(r=><option key={r.id} value={r.id}>{r.name} · {r.id.slice(0,8)}</option>)}</select><button onClick={async()=>{try{const r=await fetch(`${API}/api/compare-runs?a=${compareA}&b=${compareB}`);const d=await r.json();if(!r.ok)throw Error(d.detail);setComparison(d)}catch(e:any){setError(e.message)}}}>Compare</button>{comparison&&<pre>{JSON.stringify(comparison,null,2)}</pre>}</div></section>
- <footer>Simulation outputs are model-generated, not physical measurements. Unknown parameters block the simulation. Temporary geometry is not CAD.</footer></main>
+ <footer>Simulation outputs are model-generated, not physical measurements. Unknown parameters block the simulation. The viewport displays the supplied DROVER GLB model.</footer></main>
 }
 function Metric({title,value,sub}:{title:string,value:string,sub:string}){return <div className="metric"><label>{title}</label><strong>{value}</strong><small>{sub}</small></div>}
 function Control({label,unit,min,max,value,change}:{label:string,unit:string,min:number,max:number,value:number,change:(v:number)=>void}){const decimals=unit==='kg'?3:unit==='rad'||unit==='fraction'?2:0;return <div className="control"><div><span>{label}</span><b>{value.toFixed(decimals)} <small>{unit}</small></b></div><input type="range" min={min} max={max} value={value} disabled={max<=min} onChange={e=>change(+e.target.value)}/></div>}

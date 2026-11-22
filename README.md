@@ -1,6 +1,6 @@
 # DROVER Digital Twin
 
-Research-oriented simulation scaffold for the DROVER X-frame skirted air-cushion vehicle. Physics is implemented in SI units and is separated from the React/Three.js dashboard. Outputs are model-generated simulation values; the current repository contains no prototype validation data or CAD asset.
+Research-oriented simulation scaffold for the DROVER X-frame skirted air-cushion vehicle. Physics is implemented in SI units and is separated from the React/Three.js dashboard. The dashboard loads the supplied `drover.glb` from `frontend/public/models/`; simulation outputs are model-generated and the repository contains no prototype validation data.
 
 ## Quick start
 
@@ -67,7 +67,7 @@ Stored run outputs are available as full JSON, flattened CSV, summary PDF, and a
 - `backend/api`: FastAPI and WebSocket runtime.
 - `backend/database`: SQLite persistence boundary.
 - `backend/experiments`, `analysis`: experiment runner and metrics.
-- `frontend/src`: React dashboard, physics-driven placeholder model, controls, telemetry, Plotly graph and run exports.
+- `frontend/src`: React dashboard, supplied GLB model, controls, telemetry, Plotly graph and run exports.
 - `configuration`, `configurations`: vehicle, physics, and environment settings.
 - `docs/engineering-foundation.md`: coordinate convention, provenance policy, numerical method, and data requirements.
 
@@ -75,4 +75,4 @@ Stored run outputs are available as full JSON, flattened CSV, summary PDF, and a
 
 Install development extras with `python -m pip install -e ".[dev]"` and run `python -m pytest backend/tests`. Build the frontend with `cd frontend; npm install; npm run build`. These checks need Python and Node.js respectively. No test claim is made until those commands run successfully in an environment with the dependencies installed.
 
-No Zoo.dev model or STEP interchange files were present at implementation time. The browser uses temporary DROVER-specific geometry and labels it as not CAD. Physical validation remains pending measured mass/inertia, fan, motor, servo, battery, and prototype response data.
+The supplied `drover.glb` is copied into `frontend/public/models/drover.glb` and loaded by the viewport; the UI no longer builds a substitute vehicle mesh. Confirm its origin, units, and axis orientation against the documented body frame when comparing geometry and simulation poses. Physical validation remains pending measured mass/inertia, fan, motor, servo, battery, and prototype response data.
