@@ -1,23 +1,19 @@
 from __future__ import annotations
 import asyncio, csv, io, json, uuid
 import numpy as np
-import os, secrets
 from pathlib import Path
 from typing import Any
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from backend.simulation import Simulator, read_configs, CONFIG_ROOT
+from backend.simulation import Simulator, read_configs, ROOT
 from backend.database.store import Store
 from backend.experiments.runner import CATALOG, ExperimentRequest, run_experiment, export_bundle
 from backend.analysis.statistics import summarize, compare_simulated_to_measured, correlation
 
 app=FastAPI(title="DROVER Digital Twin API",version="0.1.0",description="Configurable 6-DOF skirted air-cushion vehicle simulator. Uncalibrated outputs are simulations, not measurements.")
-if os.getenv("APP_ENV","development").lower()=="production" and not os.getenv("DROVER_ADMIN_TOKEN"):
-    raise RuntimeError("DROVER_ADMIN_TOKEN must be set in production to protect configuration writes")
-_origins=[x.strip() for x in os.getenv("DROVER_CORS_ORIGINS","http://localhost:5173,http://127.0.0.1:5173").split(",") if x.strip()]
-app.add_middleware(CORSMiddleware,allow_origins=_origins,allow_credentials=True,allow_methods=["GET","POST","PUT","OPTIONS"],allow_headers=["Authorization","Content-Type"])
+app.add_middleware(CORSMiddleware,allow_origins=["http://localhost:5173","http://127.0.0.1:5173"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 store=Store()
 
 class ExperimentBody(BaseModel):
@@ -45,7 +41,7 @@ def missing_params():
             required_paths.append((f"physics.propulsion.motors.{side}.{k}",f"propulsion.motors.{side}.{k}"))
     for path in ("mount_positions_body_m.left","mount_positions_body_m.right","servo_angle_limits_rad","servo_rate_limit_rad_s","servo_response_time_s"):
         required_paths.append((f"physics.propulsion.{path}",f"propulsion.{path}"))
-    required_paths.extend((f"environment.{k}",k) for k in ("air_density_kg_m3","ambient_pressure_pa","temperature_k"))
+    required_paths.extend~((f"environment.{k}",k) for k in ("air_density_kg_m3","ambient_pressure_pa","temperature_k"))
     for path in ("surface.cushion_clearance_m","surface.friction_coefficient","surface.contact_stiffness_n_m","surface.contact_damping_n_s_m"):
         required_paths.append((f"environment.{path}",path))
     missing=[]
@@ -69,11 +65,7 @@ def config():
     return {"vehicle":v,"physics":p,"environment":e,"missing_required":missing,"simulation_ready":not missing}
 
 @app.put("/api/config/{kind}")
-def update_config(kind: str, body: dict[str,Any], request: Request):
-    expected=os.getenv("DROVER_ADMIN_TOKEN")
-    if expected:
-        supplied=request.headers.get("Authorization","").removeprefix("Bearer ")
-        if not secrets.compare_digest(expected,supplied): raise HTTPException(401,"A valid administrator bearer token is required")
+def update_config(kind: str, body: dict[str,Any]):
     files={"vehicle":"configuration/drover_config.json","physics":"configurations/physics_config.json","environment":"configurations/environment_config.json"}
     if kind not in files: raise HTTPException(404,"Unknown configuration kind")
     if not isinstance(body,dict): raise HTTPException(422,"Configuration document must be a JSON object")
@@ -84,7 +76,7 @@ def update_config(kind: str, body: dict[str,Any], request: Request):
     if absent: raise HTTPException(422,f"Configuration is missing required sections: {absent}")
     try: encoded=json.dumps(body,indent=2,allow_nan=False)+"\n"
     except (TypeError,ValueError) as ex: raise HTTPException(422,f"Configuration contains values that are not valid JSON: {ex}")
-    target=CONFIG_ROOT/files[kind]
+    target=ROOT/files[kind]
     # Preserve no implicit defaults: store exactly the explicit user supplied document.
     target.write_text(encoded,encoding="utf-8")
     missing=missing_params()
