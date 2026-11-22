@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+frontend/dist/
+drover.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+research_outputs/*
+!research_outputs/.gitkeep

@@ -1,0 +1,83 @@
+{
+  "project": "DROVER",
+  "model_version": "0.1.0",
+  "units": "SI",
+  "parameter_provenance": {
+    "frame_dimensions": "user_supplied_approximation",
+    "target_vehicle_mass": "user_supplied_target_unverified",
+    "payload_capacity": "user_supplied_requirement",
+    "propeller_geometry": "provisional_user_supplied",
+    "null_parameter_values": "unknown_until_configured"
+  },
+  "vehicle": {
+    "frame": "X-frame",
+    "length_m": 0.30,
+    "width_m": 0.30,
+    "target_mass_kg": 2.5,
+    "payload_capacity_kg": 0.5,
+    "mass_interpretation": "unresolved_total_vehicle_mass_includes_battery_and_excludes_payload_until_confirmed",
+    "coordinate_system": {
+      "x": "forward",
+      "y": "left",
+      "z": "up",
+      "origin": "main_frame_geometric_center",
+      "center_of_mass_offset_from_origin_m": null,
+      "orientation_representation": "unit_quaternion_body_to_world"
+    }
+  },
+  "lift_system": {
+    "type": "skirted_air_cushion",
+    "fan_count": 1,
+    "fan_location": "bottom_center",
+    "plenum": true,
+    "flexible_skirt": true,
+    "pressure_model": "dynamic_mass_conservation",
+    "fan_characteristic": null,
+    "effective_cushion_area_m2": null,
+    "cushion_volume_m3": null,
+    "leakage_coefficient": null,
+    "calibration_status": "pending"
+  },
+  "propulsion": {
+    "motor_count": 2,
+    "mounting": "opposite_rear_x_frame_arms",
+    "rotation": {
+      "left": "CW",
+      "right": "CCW"
+    },
+    "propeller_diameter_in": 7,
+    "propeller_blades": 3,
+    "specification_status": "provisional",
+    "independent_speed_control": true,
+    "independent_vertical_tilt": true,
+    "thrust_coefficients": null
+  },
+  "servos": {
+    "count": 2,
+    "movement": "vertical_motor_tilt",
+    "independent_control": true,
+    "angle_limits_deg": null,
+    "calibration_status": "pending"
+  },
+  "battery": {
+    "target_mass_kg": 0.5,
+    "voltage_v": null,
+    "capacity_ah": null,
+    "internal_resistance_ohm": null,
+    "calibration_status": "pending"
+  },
+  "simulation": {
+    "degrees_of_freedom": 6,
+    "physics_frequency_hz": 100,
+    "telemetry_frequency_hz": 100,
+    "dashboard_frequency_hz": 10,
+    "rendering_target_fps": 60,
+    "fixed_timestep": true
+  },
+  "research": {
+    "experiment_count_initial": 8,
+    "repeatable_runs": true,
+    "export_formats": ["CSV", "JSON", "PNG", "SVG", "PDF"],
+    "physical_validation": "pending"
+  }
+}

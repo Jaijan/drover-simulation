@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "units": "SI",
+  "air_density_kg_m3": null,
+  "ambient_pressure_pa": null,
+  "temperature_k": null,
+  "wind_velocity_world_m_s": [0.0, 0.0, 0.0],
+  "surface": {
+    "profile": "smooth",
+    "friction_coefficient": null,
+    "contact_stiffness_n_m": null,
+    "contact_damping_n_s_m": null,
+    "ground_height_m": 0.0,
+    "cushion_clearance_m": null,
+    "height_map": null,
+    "height_map_format": "x_m_axis_y_m_axis_height_m_matrix"
+  },
+  "initial_state_reference": "vehicle_frame_origin_at_surface_plus_configured_clearance_unless_overridden_by_experiment_initial_conditions",
+  "disturbance": {
+    "force_world_n": [0.0, 0.0, 0.0],
+    "moment_body_nm": [0.0, 0.0, 0.0],
+    "random_force_std_world_n": null,
+    "random_moment_std_body_nm": null,
+    "random_seed": 0
+  },
+  "provenance": {
+    "zero_wind_and_disturbance": "deterministic_baseline_condition_not_measured",
+    "random_disturbance_seed": "user_configured_for_reproducible_gaussian_disturbance_when_std_values_are_supplied",
+    "ground_height": "coordinate_reference_assumption",
+    "unpopulated_physical_properties": "unknown_until_configured"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "model_version": "0.1.0",
+  "units": "SI",
+  "provenance_policy": "Every configured physical value must include a provenance entry; null means unavailable and must block dependent calculations.",
+  "rigid_body": {
+    "dry_mass_kg": null,
+    "dry_center_of_mass_body_m": null,
+    "dry_inertia_tensor_body_kg_m2": null,
+    "inertia_tensor_convention": "symmetric_about_center_of_mass_body_axes",
+    "mass_source": "unresolved_from_vehicle_configuration",
+    "inertia_source": "unknown"
+  },
+  "payload": {
+    "mass_kg": 0.0,
+    "position_body_m": null,
+    "inertia_tensor_body_kg_m2": null,
+    "max_mass_kg": 0.5,
+    "mass_provenance": "initial_condition_zero_payload"
+  },
+  "integration": {
+    "method": "fixed_step_semi_implicit_euler_with_quaternion_orientation",
+    "physics_frequency_hz": 100,
+    "max_substeps": 1,
+    "deterministic": true
+  },
+  "aerodynamics": {
+    "reference_area_m2": null,
+    "drag_coefficient": null,
+    "provenance": "unknown_until_measured_or_estimated"
+  },
+  "air": {
+    "specific_gas_constant_j_kg_k": 287.05,
+    "specific_gas_constant_provenance": "standard_reference_value_unvalidated_for_test_conditions"
+  },
+  "lift": {
+    "effective_area_m2": null,
+    "cushion_volume_m3": null,
+    "fan_curve": null,
+    "fan_curve_format": "rpm_points_pressure_pa_flow_m3_s_matrix",
+    "initial_air_mass_kg": null,
+    "fan_max_speed_rpm": null,
+    "fan_response_time_s": null,
+    "fan_max_acceleration_rpm_s": null,
+    "fan_efficiency": null,
+    "skirt_perimeter_m": null,
+    "lift_force_position_body_m": null,
+    "leakage_area_m2": null,
+    "discharge_coefficient": null,
+    "calibration_status": "uncalibrated"
+  },
+  "propulsion": {
+    "motors": {
+      "left": { "thrust_coefficient_n_per_rad_s2": null, "max_speed_rad_s": null, "max_acceleration_rad_s2": null, "response_time_s": null, "reaction_torque_coefficient_nm_per_n": null, "propeller_rotation_sign": null, "propeller_rotor_inertia_kg_m2": null, "static_shaft_power_curve": null },
+      "right": { "thrust_coefficient_n_per_rad_s2": null, "max_speed_rad_s": null, "max_acceleration_rad_s2": null, "response_time_s": null, "reaction_torque_coefficient_nm_per_n": null, "propeller_rotation_sign": null, "propeller_rotor_inertia_kg_m2": null, "static_shaft_power_curve": null }
+    },
+    "mount_positions_body_m": { "left": null, "right": null },
+    "servo_angle_limits_rad": null,
+    "servo_rate_limit_rad_s": null,
+    "servo_response_time_s": null,
+    "servo_electrical_power_w": null
+  },
+  "controllers": {
+    "assisted_enabled": false,
+    "heading_pid": {"kp_rpm_per_rad": null, "ki_rpm_per_rad_s": null, "kd_rpm_s_per_rad": null, "max_differential_rpm": null},
+    "hover_height_pid": {"kp_rpm_per_m": null, "ki_rpm_per_m_s": null, "kd_rpm_s_per_m": null},
+    "control_authority_note": "Differential rear thrust produces yaw moment only when arm geometry and thrust are configured; no independent roll actuator is provided."
+  },
+  "battery": {
+    "nominal_voltage_v": null,
+    "capacity_ah": null,
+    "internal_resistance_ohm": null,
+    "esc_efficiency": null,
+    "channel_motor_efficiencies": { "lift": null, "left": null, "right": null },
+    "servo_power_model": null,
+    "lift_motor_efficiency": null,
+    "propulsion_motor_efficiency": {"left": null, "right": null}
+  }
+}
